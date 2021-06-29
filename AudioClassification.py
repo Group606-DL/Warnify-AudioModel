@@ -156,7 +156,7 @@ def getFileProperties(file_path, file):
         shutil.move(file_path, 'Dataset/6Channels/'+file)
 
 
-# In[10]:
+# In[9]:
 
 
 for subdirectory in os.listdir(audio_path+'/'):
@@ -172,7 +172,7 @@ for subdirectory in os.listdir(audio_path+'/'):
 # The audio file will initially be read as a binary file, which we want to convert into a numerical tensor.
 # The label for each WAV file is its parent directory.
 
-# In[11]:
+# In[10]:
 
 
 def decode_audio(audio_binary):
@@ -184,7 +184,7 @@ def get_label(file_path):
     return parts[-2] 
 
 
-# In[12]:
+# In[11]:
 
 
 # Take the filename of the WAV file and return a tuple containing the audio and labels for supervised training.
@@ -197,7 +197,7 @@ def get_waveform_and_label(file_path):
     return waveform, label
 
 
-# In[13]:
+# In[12]:
 
 
 AUTOTUNE = tf.data.AUTOTUNE # For better performance, which will prompt the tf.data runtime to tune the value dynamically at runtime
@@ -207,7 +207,7 @@ waveform_ds = files_ds.map(get_waveform_and_label, num_parallel_calls=AUTOTUNE)
 
 # Examine a few audio waveforms with their corresponding labels
 
-# In[14]:
+# In[13]:
 
 
 rows = 3
@@ -235,7 +235,7 @@ plt.show()
 # 
 # We also want the waveforms to have the same length, so that when we convert it to a spectrogram image, the results will have similar dimensions. We do this by zero padding the audio clips that are shorter than the longest one in the dataset (about 10 seconds)
 
-# In[15]:
+# In[14]:
 
 
 def get_spectrogram(waveform):
@@ -257,7 +257,7 @@ def get_spectrogram(waveform):
 # ##### One example from the datasets
 # The waveform, the spectrogram and the actual audio of one example from the dataset.
 
-# In[16]:
+# In[15]:
 
 
 for waveform, label in waveform_ds.take(1):
@@ -271,7 +271,7 @@ print('Audio playback')
 display.display(display.Audio(waveform, rate=22050))
 
 
-# In[17]:
+# In[16]:
 
 
 def plot_spectrogram(spectrogram, ax):
@@ -294,7 +294,7 @@ axes[1].set_title('Spectrogram')
 plt.show()
 
 
-# In[18]:
+# In[17]:
 
 
 # Transform the waveform dataset to have spectrogram images and their corresponding labels as integer IDs.
@@ -313,7 +313,7 @@ spectrogram_ds = waveform_ds.map(
 
 # Examine the spectrogram images for different samples of the dataset.
 
-# In[19]:
+# In[18]:
 
 
 rows = 3
@@ -334,7 +334,7 @@ plt.show()
 # ## Build and train the model
 # 
 
-# In[20]:
+# In[19]:
 
 
 def preprocess_dataset(files):
@@ -352,7 +352,7 @@ test_ds = preprocess_dataset(test_files)
 
 # Batch the training and validation sets for model training.
 
-# In[21]:
+# In[20]:
 
 
 batch_size = 20 # Tested with 10, 20 and 50
@@ -360,7 +360,7 @@ train_ds = train_ds.batch(batch_size)
 val_ds = val_ds.batch(batch_size)
 
 
-# In[24]:
+# In[21]:
 
 
 # Add dataset cache() and prefetch() operations to reduce read latency while training the model.
@@ -378,7 +378,7 @@ num_labels = len(commands)
 
 # For the model, we use simple CNN (convolutional neural network), since we have transformed the audio files into spectrogram images.
 
-# In[25]:
+# In[22]:
 
 
 # Building the finanl CNN model
@@ -411,7 +411,7 @@ model.add(Dense(num_labels, activation='sigmoid'))
 model.summary()
 
 
-# In[30]:
+# In[23]:
 
 
 # The model was tested with Epochs number of 20, 50, 80 and 100 
@@ -430,7 +430,7 @@ history = model.fit(
 
 # #### Show training and validation loss curves to see how your model has improved during training
 
-# In[31]:
+# In[24]:
 
 
 metrics = history.history
@@ -439,7 +439,7 @@ plt.legend(['loss', 'val_loss'])
 plt.show()
 
 
-# In[ ]:
+# In[25]:
 
 
 metrics = history.history
@@ -448,7 +448,7 @@ plt.legend(['accuracy', 'val_accuracy'])
 plt.show()
 
 
-# In[ ]:
+# In[26]:
 
 
 # Save the current model to file on disk
@@ -464,7 +464,7 @@ model.save('models/ep-'+ str(EPOCHS) +'-AudioModel-' +  date_time + '.h5')
 # Run the model on the test dataset and check the performance.
 # (Most high percent we got was 78% of test accuracy without music label and 72% with music label)
 
-# In[ ]:
+# In[27]:
 
 
 test_audio = []
@@ -478,7 +478,7 @@ test_audio = np.array(test_audio)
 test_labels = np.array(test_labels)
 
 
-# In[ ]:
+# In[28]:
 
 
 y_pred = np.argmax(model.predict(test_audio), axis=1)
@@ -490,7 +490,7 @@ print(f'Test set accuracy: {test_acc:.0%}')
 
 # ### Display a confusion matrix
 
-# In[ ]:
+# In[29]:
 
 
 confusion_mtx = tf.math.confusion_matrix(y_true, y_pred) 
@@ -505,7 +505,7 @@ plt.show()
 # ## Manual test on an audio file
 # Verify the model's prediction output using an input audio file of explosion (or any other label)
 
-# In[37]:
+# In[30]:
 
 
 # Load the saved model
@@ -529,7 +529,7 @@ for spectrogram, label in sample_ds.batch(1):
 
 # Download sample from Youtube by id, convert it to wav format, and cut it to the first 60 seconds
 
-# In[38]:
+# In[31]:
 
 
 get_ipython().system('youtubeId=\'Apwf_rcT3hQ\' && youtube-dl https://www.youtube.com/watch?v=${youtubeId} --quiet --extract-audio --audio-format wav --output "${youtubeId}.wav" && mv ${youtubeId}.wav "Dataset/Testing/${youtubeId}.wav" && ffmpeg -loglevel quiet -i "Dataset/Testing/${youtubeId}.wav" -ar 22050 -ss "0" -to "60" "./Dataset/Testing/${youtubeId}_out.wav"')
@@ -537,7 +537,7 @@ get_ipython().system('youtubeId=\'Apwf_rcT3hQ\' && youtube-dl https://www.youtub
 
 # Splitting the wav file to small parts
 
-# In[39]:
+# In[32]:
 
 
 second = 1000 # Works in milliseconds
@@ -571,7 +571,7 @@ for i in range(int(duration/5)):
 
 # Send each part to model prediction
 
-# In[41]:
+# In[33]:
 
 
 data_dir = pathlib.Path('Dataset/WorkingDirectory/'+fileid)
@@ -607,7 +607,7 @@ print (results)
 
 # # Util functions
 
-# In[ ]:
+# In[34]:
 
 
 # For fusion final model - convert Mp4 to Wav
